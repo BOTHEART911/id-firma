@@ -151,10 +151,10 @@
       <div id="grid" class="grid"></div>
 
       <div style="margin-top:14px;">
-        <button id="btnCopiar" class="btn">COPIAR ID FIRMA</button>
+        <button id="btnCopiar" class="btn">COPIAR DATOS</button>
         <button id="btnAbrirWebApp" class="btn btn-secondary">ABRIR VERIFICACIÓN EN WEBAPP</button>
         <p class="tiny muted" id="corsHint" style="display:none;">
-          Si estás en GitHub Pages y el navegador bloquea la consulta por CORS, usa “ABRIR VERIFICACIÓN EN WEBAPP”.
+          Si el navegador bloquea la consulta, usa “ABRIR VERIFICACIÓN EN WEBAPP”.
         </p>
       </div>
 
@@ -290,25 +290,57 @@
       addRow('SUPERVISOR', data.supervisor);
     }
 
-    document.getElementById('btnCopiar').addEventListener('click', async ()=>{
-      const idFirma = String(getParam('idFirma') || '').trim();
-      if(!idFirma){
-        Swal.fire({icon:'info', title:'Sin ID para copiar'});
-        playSoundOnce(SOUNDS.info);
-        return;
-      }
-      try{
-        if(navigator.clipboard && navigator.clipboard.writeText){
-          await navigator.clipboard.writeText(idFirma);
-        }
-        Swal.fire({icon:'success', title:'Copiado', timer:1600, showConfirmButton:false});
-        playSoundOnce(SOUNDS.success);
-      }catch(e){
-        Swal.fire({icon:'error', title:'No se pudo copiar'});
-        playSoundOnce(SOUNDS.error);
-      }
-    });
+   document.getElementById("btnCopiar").addEventListener("click", async ()=>{
+  function safe(v){
+    return (v === null || v === undefined) ? "" : String(v);
+  }
+  function line(k,v){
+    return k + ": " + safe(v);
+  }
 
+  var lines = [];
+  if(DATA && DATA.valido){
+    lines.push(line("ID FIRMA", DATA.idFirma));
+    lines.push(line("FECHA / HORA", DATA.fechaHora));
+    lines.push(line("CONTRATISTA", DATA.contratista));
+    lines.push(line("DOCUMENTO", DATA.documento));
+    lines.push(line("CONTRATO", DATA.contrato));
+    lines.push(line("INFORME", DATA.informe));
+    lines.push(line("RADICADO", DATA.radicado));
+    lines.push(line("SUPERVISOR", DATA.supervisor));
+  }else{
+    lines.push(line("ID FIRMA", (DATA && DATA.idFirma) ? DATA.idFirma : ""));
+  }
+
+  var text = lines.join("\n");
+  if(!text.trim()){
+    Swal.fire({icon:"info",title:"Sin datos para copiar"});
+    playSoundOnce(SOUNDS.info);
+    return;
+  }
+
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+    }else{
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly","");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+
+    Swal.fire({icon:"success",title:"Datos copiados",timer:1600,showConfirmButton:false});
+    playSoundOnce(SOUNDS.success);
+  }catch(e){
+    Swal.fire({icon:"error",title:"No se pudo copiar"});
+    playSoundOnce(SOUNDS.error);
+  }
+});
     document.getElementById('btnAbrirWebApp').addEventListener('click', ()=>{
       const idFirma = String(getParam('idFirma') || '').trim();
       const url = buildWebAppVerifyUrl(idFirma);
