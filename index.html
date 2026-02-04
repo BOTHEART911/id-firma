@@ -171,6 +171,8 @@
       error: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3'
     };
 
+    let FIRMA_DATA = null;
+
     function playSoundOnce(url){
       try{
         const a = new Audio(url);
@@ -258,6 +260,8 @@
       const idFirma = String(getParam('idFirma') || '').trim();
       clearGrid();
 
+      FIRMA_DATA = null;
+
       if(!idFirma){
         setBadge(false);
         addRow('ID FIRMA','');
@@ -266,81 +270,84 @@
 
       addRow('ID FIRMA', idFirma);
 
-      let data = null;
       try{
-        data = await fetchFirmaJson(idFirma);
+        FIRMA_DATA = await fetchFirmaJson(idFirma);
       }catch(e){
         setBadge(false);
         addRow('ERROR', 'No se pudo consultar (posible CORS o red).');
         return;
       }
 
-      if(!data || !data.valido){
+      if(!FIRMA_DATA || !FIRMA_DATA.valido){
         setBadge(false);
         return;
       }
 
       setBadge(true);
-      addRow('FECHA / HORA', data.fechaHora);
-      addRow('CONTRATISTA', data.contratista);
-      addRow('DOCUMENTO', data.documento);
-      addRow('CONTRATO', data.contrato);
-      addRow('INFORME', data.informe);
-      addRow('RADICADO', data.radicado);
-      addRow('SUPERVISOR', data.supervisor);
+      addRow('FECHA / HORA', FIRMA_DATA.fechaHora);
+      addRow('CONTRATISTA', FIRMA_DATA.contratista);
+      addRow('DOCUMENTO', FIRMA_DATA.documento);
+      addRow('CONTRATO', FIRMA_DATA.contrato);
+      addRow('INFORME', FIRMA_DATA.informe);
+      addRow('RADICADO', FIRMA_DATA.radicado);
+      addRow('SUPERVISOR', FIRMA_DATA.supervisor);
     }
 
-   document.getElementById("btnCopiar").addEventListener("click", async ()=>{
-  function safe(v){
-    return (v === null || v === undefined) ? "" : String(v);
-  }
-  function line(k,v){
-    return k + ": " + safe(v);
-  }
+    document.getElementById('btnCopiar').addEventListener('click', async ()=>{
+      function safe(v){
+        return (v === null || v === undefined) ? '' : String(v);
+      }
+      function line(k,v){
+        return k + ': ' + safe(v);
+      }
 
-  var lines = [];
-  if(DATA && DATA.valido){
-    lines.push(line("ID FIRMA", DATA.idFirma));
-    lines.push(line("FECHA / HORA", DATA.fechaHora));
-    lines.push(line("CONTRATISTA", DATA.contratista));
-    lines.push(line("DOCUMENTO", DATA.documento));
-    lines.push(line("CONTRATO", DATA.contrato));
-    lines.push(line("INFORME", DATA.informe));
-    lines.push(line("RADICADO", DATA.radicado));
-    lines.push(line("SUPERVISOR", DATA.supervisor));
-  }else{
-    lines.push(line("ID FIRMA", (DATA && DATA.idFirma) ? DATA.idFirma : ""));
-  }
+      const idFirma = String(getParam('idFirma') || '').trim();
 
-  var text = lines.join("\n");
-  if(!text.trim()){
-    Swal.fire({icon:"info",title:"Sin datos para copiar"});
-    playSoundOnce(SOUNDS.info);
-    return;
-  }
+      var lines = [];
+      if(FIRMA_DATA && FIRMA_DATA.valido){
+        lines.push(line('ID FIRMA', FIRMA_DATA.idFirma));
+        lines.push(line('FECHA / HORA', FIRMA_DATA.fechaHora));
+        lines.push(line('CONTRATISTA', FIRMA_DATA.contratista));
+        lines.push(line('DOCUMENTO', FIRMA_DATA.documento));
+        lines.push(line('CONTRATO', FIRMA_DATA.contrato));
+        lines.push(line('INFORME', FIRMA_DATA.informe));
+        lines.push(line('RADICADO', FIRMA_DATA.radicado));
+        lines.push(line('SUPERVISOR', FIRMA_DATA.supervisor));
+      }else{
+        lines.push(line('ID FIRMA', idFirma));
+        lines.push(line('ESTADO', 'NO VÁLIDO'));
+      }
 
-  try{
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      await navigator.clipboard.writeText(text);
-    }else{
-      var ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly","");
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-    }
+      var text = lines.join('\n');
+      if(!text.trim()){
+        Swal.fire({icon:'info',title:'Sin datos para copiar'});
+        playSoundOnce(SOUNDS.info);
+        return;
+      }
 
-    Swal.fire({icon:"success",title:"Datos copiados",timer:1600,showConfirmButton:false});
-    playSoundOnce(SOUNDS.success);
-  }catch(e){
-    Swal.fire({icon:"error",title:"No se pudo copiar"});
-    playSoundOnce(SOUNDS.error);
-  }
-});
+      try{
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          await navigator.clipboard.writeText(text);
+        }else{
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly','');
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+
+        Swal.fire({icon:'success',title:'Datos copiados',timer:1600,showConfirmButton:false});
+        playSoundOnce(SOUNDS.success);
+      }catch(e){
+        Swal.fire({icon:'error',title:'No se pudo copiar'});
+        playSoundOnce(SOUNDS.error);
+      }
+    });
+
     document.getElementById('btnAbrirWebApp').addEventListener('click', ()=>{
       const idFirma = String(getParam('idFirma') || '').trim();
       const url = buildWebAppVerifyUrl(idFirma);
