@@ -4,17 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Verificación de Firma</title>
-
-  <!-- SweetAlert2 (igual que tu app) -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
   <style>
     :root{
       --primary:#06402B;
       --primary-2:#04281C;
       --ok:#16a34a;
       --error:#dc2626;
-      --scrim:rgba(0,0,0,.35);
       --card:rgba(255,255,255,.85);
       --border:#ddd;
       --muted:#6b7280;
@@ -46,7 +42,7 @@
       padding: 20px 20px 16px;
       box-sizing:border-box;
     }
-    h1,h2{
+    h1{
       margin: 8px 0 12px;
       text-align:center;
       color: var(--primary);
@@ -73,66 +69,62 @@
     }
     .pill.ok{ border-color: var(--ok); color: var(--ok); }
     .pill.bad{ border-color: var(--error); color: var(--error); }
-
     .grid{
       display:grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-top: 14px;
+      grid-template-columns:1fr;
+      gap:10px;
+      margin-top:14px;
     }
     .row{
       background:#fff;
-      border: 1.5px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 10px 12px;
+      border:1.5px solid #e5e7eb;
+      border-radius:12px;
+      padding:10px 12px;
     }
     .k{
-      font-weight: 900;
-      color: var(--primary);
-      font-size: .82rem;
-      margin: 0 0 2px;
+      font-weight:900;
+      color:var(--primary);
+      font-size:.82rem;
+      margin:0 0 2px;
     }
     .v{
-      margin: 0;
-      font-weight: 700;
+      margin:0;
+      font-weight:700;
       color:#111;
-      word-break: break-word;
+      word-break:break-word;
     }
-
     .btn{
       width:100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 2px solid var(--primary);
-      background: var(--primary);
+      padding:12px;
+      border-radius:10px;
+      border:2px solid var(--primary);
+      background:var(--primary);
       color:#fff;
-      font-weight: 900;
+      font-weight:900;
       cursor:pointer;
-      transition: transform .08s ease, background .2s ease, border-color .2s ease;
+      transition:transform .08s ease, background .2s ease, border-color .2s ease;
     }
     .btn:hover{
-      background: var(--primary-2);
-      border-color: var(--primary-2);
+      background:var(--primary-2);
+      border-color:var(--primary-2);
     }
-    .btn:active{
-      transform: scale(.99);
-    }
+    .btn:active{ transform:scale(.99); }
     .btn-secondary{
       background:#fff;
       color:#000;
-      border-color: var(--primary);
+      border-color:var(--primary);
       margin-top:10px;
     }
     .btn-secondary:hover{
-      background: var(--primary-2);
+      background:var(--primary-2);
       color:#fff;
-      border-color: var(--primary-2);
+      border-color:var(--primary-2);
     }
     .footer{
-      margin-top: 16px;
+      margin-top:16px;
       text-align:center;
-      color: var(--muted);
-      font-size: .85rem;
+      color:var(--muted);
+      font-size:.85rem;
     }
     .tiny{
       font-size:.8rem;
@@ -141,12 +133,11 @@
       text-align:center;
     }
     .muted{
-      color: var(--muted);
+      color:var(--muted);
       font-weight:600;
     }
   </style>
 </head>
-
 <body>
   <main class="container">
     <section class="card">
@@ -161,10 +152,9 @@
 
       <div style="margin-top:14px;">
         <button id="btnCopiar" class="btn">COPIAR ID FIRMA</button>
-        <button id="btnAbrirWebApp" class="btn btn-secondary">ABRIR EN WEBAPP (MISMO DOMINIO)</button>
+        <button id="btnAbrirWebApp" class="btn btn-secondary">ABRIR VERIFICACIÓN EN WEBAPP</button>
         <p class="tiny muted" id="corsHint" style="display:none;">
-          Nota: si estás viendo esta página desde un dominio diferente (por ejemplo GitHub Pages), el navegador puede bloquear la consulta por CORS.
-          En ese caso usa “ABRIR EN WEBAPP”.
+          Si estás en GitHub Pages y el navegador bloquea la consulta por CORS, usa “ABRIR VERIFICACIÓN EN WEBAPP”.
         </p>
       </div>
 
@@ -209,6 +199,10 @@
       subtitle.textContent = 'No se encontró el ID de firma en la base de datos.';
     }
 
+    function clearGrid(){
+      document.getElementById('grid').innerHTML = '';
+    }
+
     function addRow(k,v){
       const g = document.getElementById('grid');
       const row = document.createElement('div');
@@ -227,11 +221,6 @@
       g.appendChild(row);
     }
 
-    function clearGrid(){
-      const g = document.getElementById('grid');
-      g.innerHTML = '';
-    }
-
     function showCorsHintIfNeeded(){
       const hint = document.getElementById('corsHint');
       try{
@@ -241,6 +230,13 @@
           hint.style.display = '';
         }
       }catch(e){}
+    }
+
+    function buildWebAppVerifyUrl(idFirma){
+      return WEBAPP_BASE + '?' + [
+        'action=verificarFirma',
+        'idFirma=' + encodeURIComponent(idFirma)
+      ].join('&');
     }
 
     async function fetchFirmaJson(idFirma){
@@ -285,7 +281,6 @@
       }
 
       setBadge(true);
-
       addRow('FECHA / HORA', data.fechaHora);
       addRow('CONTRATISTA', data.contratista);
       addRow('DOCUMENTO', data.documento);
@@ -316,10 +311,7 @@
 
     document.getElementById('btnAbrirWebApp').addEventListener('click', ()=>{
       const idFirma = String(getParam('idFirma') || '').trim();
-      const url = WEBAPP_BASE + '?' + [
-        'action=verificarFirma',
-        'idFirma=' + encodeURIComponent(idFirma)
-      ].join('&');
+      const url = buildWebAppVerifyUrl(idFirma);
       window.open(url, '_blank', 'noopener');
     });
 
